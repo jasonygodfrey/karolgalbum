@@ -2,7 +2,10 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    background-color: red;
+    background-image: url("background2.jpg");  /* use the url() function */
+    background-size: cover; /* to make sure the image covers the full viewport */
+    background-repeat: no-repeat; /* to prevent the image from repeating if it's smaller than the viewport */
+    background-position: center; /* to center the background image */
 }
 
 .container {

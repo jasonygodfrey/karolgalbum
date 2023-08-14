@@ -7,13 +7,16 @@ import { UnrealBloomPass } from "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r12
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ alpha: true });  // enable alpha channel
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);  // the second parameter is the alpha (0 means fully transparent)
+
 document.body.appendChild(renderer.domElement);
 
 
 // Initialize the Effect Composer
 const composer = new EffectComposer(renderer);
+
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
@@ -32,6 +35,7 @@ let mouseRadius = 0.2;
 let mouseStrength = 0.03;
 let raycaster = new THREE.Raycaster();
 
+const cameraParallaxFactor = 0.5;
 
 window.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -40,6 +44,11 @@ window.addEventListener('mousemove', (e) => {
 
     raycaster.setFromCamera(mouse, camera);
     mouse = raycaster.ray.at(1.3);  // the z-position where the particles are
+
+    // Apply Parallax effect to camera based on mouse movement
+    camera.position.x += (mouse.x * cameraParallaxFactor - camera.position.x) * 0.05;
+    camera.position.y += (-mouse.y * cameraParallaxFactor - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
 });
 window.addEventListener('touchstart', handleTouch);
 window.addEventListener('touchmove', handleTouch);
@@ -57,17 +66,26 @@ function handleTouch(e) {
         raycaster.setFromCamera(mouse, camera);
         mouse = raycaster.ray.at(1.3);  // the z-position where the particles are
     }
+    // Apply Parallax effect to camera based on touch movement
+    camera.position.x += (mouse.x * cameraParallaxFactor - camera.position.x) * 0.05;
+    camera.position.y += (-mouse.y * cameraParallaxFactor - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
 }
+const scale = 1; // Adjust this value for your desired scale. E.g., 1.5 means the image will be 50% bigger
 
 textureLoader.load('albumcover.jpeg', (imageTexture) => {
     const imgSize = imageTexture.image.width;
+    const scaledWidth = imgSize * scale;
+    const scaledHeight = imageTexture.image.height * scale;
+    
     const canvas = document.createElement('canvas');
-    canvas.width = imgSize;
-    canvas.height = imgSize;
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
     const context = canvas.getContext('2d');
-    context.drawImage(imageTexture.image, 0, 0, imgSize, imgSize);
+    
+    context.drawImage(imageTexture.image, 0, 0, scaledWidth, scaledHeight);
 
-    const imgData = context.getImageData(0, 0, imgSize, imgSize).data;
+    const imgData = context.getImageData(0, 0, scaledWidth, scaledHeight).data;
     const resolutionFactor = 7;
 
     const particleTexture = textureLoader.load('particles2.png');
@@ -110,6 +128,9 @@ textureLoader.load('albumcover.jpeg', (imageTexture) => {
     });
     const particles = new THREE.Points(particlesGeometry, particlesMaterial);
     scene.add(particles);
+
+
+
 
     function animate() {
         const positions = particlesGeometry.attributes.position.array;
