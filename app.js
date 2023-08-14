@@ -11,6 +11,19 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+
+// Initialize the Effect Composer
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+const bloomOptions = {
+    strength: 2.5,   // increased strength
+    radius: 0.6,     // increased radius for a broader glow
+    threshold: 0   // decreased threshold to make more particles bloom
+};
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), bloomOptions.strength, bloomOptions.radius, bloomOptions.threshold);
+composer.addPass(bloomPass);
 // Load the image texture
 const textureLoader = new THREE.TextureLoader();
 
@@ -45,6 +58,7 @@ textureLoader.load('albumcover.jpeg', (imageTexture) => {
     const particleVertices = [];
     const particleColors = [];
     const originalPositions = [];
+    const increasedBrightness = 1.5; // Place this before the loop
 
     for (let y = 0; y < imgSize; y += resolutionFactor) {
         for (let x = 0; x < imgSize; x += resolutionFactor) {
@@ -60,7 +74,7 @@ textureLoader.load('albumcover.jpeg', (imageTexture) => {
                 const yPos = (y / imgSize - 0.5) * -2;
                 particleVertices.push(xPos, yPos, 0);
                 originalPositions.push(xPos, yPos, 0);
-                particleColors.push(r / 255, g / 255, b / 255);
+                particleColors.push((r / 255) * increasedBrightness, (g / 255) * increasedBrightness, (b / 255) * increasedBrightness);
             }
         }
     }
@@ -73,7 +87,7 @@ textureLoader.load('albumcover.jpeg', (imageTexture) => {
         map: particleTexture, 
         vertexColors: true, 
         transparent: true,
-        opacity: 2.2, // Adjust this value
+        opacity: 1, // Adjust this value
         
 
     });
@@ -105,7 +119,8 @@ textureLoader.load('albumcover.jpeg', (imageTexture) => {
         }
         particlesGeometry.attributes.position.needsUpdate = true;
 
-        renderer.render(scene, camera);
+        //renderer.render(scene, camera);
+        composer.render();
         requestAnimationFrame(animate);
     }
 
@@ -122,4 +137,5 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
 
     renderer.setSize(newWidth, newHeight);
+    composer.setSize(newWidth, newHeight);
 });
