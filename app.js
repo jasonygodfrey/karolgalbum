@@ -41,6 +41,23 @@ window.addEventListener('mousemove', (e) => {
     raycaster.setFromCamera(mouse, camera);
     mouse = raycaster.ray.at(1.3);  // the z-position where the particles are
 });
+window.addEventListener('touchstart', handleTouch);
+window.addEventListener('touchmove', handleTouch);
+function handleTouch(e) {
+    e.preventDefault();  // Prevents the default behavior of touch events (like scrolling)
+    
+    // Check if there's at least one touch
+    if (e.touches.length > 0) {
+        const touch = e.touches[0];
+
+        mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        mouse.z = 0.5;  // depth factor to project into the scene
+
+        raycaster.setFromCamera(mouse, camera);
+        mouse = raycaster.ray.at(1.3);  // the z-position where the particles are
+    }
+}
 
 textureLoader.load('albumcover.jpeg', (imageTexture) => {
     const imgSize = imageTexture.image.width;
